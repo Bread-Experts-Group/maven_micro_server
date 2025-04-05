@@ -65,26 +65,30 @@ fun main(args: Array<String>) {
 										requestedPath.inputStream().transferTo(sock.outputStream)
 									true
 								} else if (requestedPath.isDirectory) {
-									debug("Directory listing for \"${requestedPath.canonicalPath}\"")
+									debug("Directory listing for \"${requestedPath.invariantSeparatorsPath}\"")
 									val data = buildString {
 										append("<!doctype html><html><head><style>")
 										append("*{font-family:\"Lucida Console\",monospace;color:white;background-color:darkblue")
 										append(";text-align:left}</style></head><body>")
 										append("<table style=\"width:100%\">")
 										append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
-										val files = requestedPath.listFiles()!!
-										files.sortByDescending { it.lastModified() }
-										files.sortByDescending { it.isDirectory }
-										files.forEach {
-											append("<tr><td><a href=\"${it.name}/\">${it.name}</td>")
-											append("<td>${if (it.isDirectory) "Directory" else it.length()}</td>")
-											val mod = Instant.ofEpochMilli(it.lastModified())
-												.atZone(ZoneId.systemDefault())
-											append("<td>${dateTimeFormatter.format(mod)}</td></tr>")
+										val files = requestedPath.listFiles()
+										if (files != null) {
+											files.sortByDescending { it.lastModified() }
+											files.sortByDescending { it.isDirectory }
+											files.forEach {
+												append("<tr><td><a href=\"${it.name}/\">${it.name}</td>")
+												append("<td>${if (it.isDirectory) "Directory" else it.length()}</td>")
+												val mod = Instant.ofEpochMilli(it.lastModified())
+													.atZone(ZoneId.systemDefault())
+												append("<td>${dateTimeFormatter.format(mod)}</td></tr>")
+											}
+										} else {
+											append("<tr><td>Folder not accessible</td><td>-1</td><td>-1</td></tr>")
 										}
 										append("<caption>")
 										val itParent = it.parentFile
-										append(itParent.canonicalPath + File.separator)
+										append(itParent.invariantSeparatorsPath + '/')
 										var accessible = requestedPath.invariantSeparatorsPath
 											.substring(itParent.invariantSeparatorsPath.length + 1)
 										var completeCaption = ""

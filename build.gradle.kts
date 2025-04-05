@@ -2,13 +2,15 @@ import java.util.Properties
 
 plugins {
 	kotlin("jvm") version "2.1.10"
+	id("org.jetbrains.dokka-javadoc") version "2.0.0"
 	`maven-publish`
+	`java-library`
 	signing
 	application
 }
 
 group = "bread_experts_group"
-version = "1.1"
+version = "1.2"
 
 repositories {
 	mavenCentral()
@@ -18,7 +20,7 @@ repositories {
 dependencies {
 	testImplementation(kotlin("test"))
 	implementation(kotlin("reflect"))
-	implementation("bread_experts_group:bread_server_lib-code:1.1")
+	implementation("bread_experts_group:bread_server_lib-code:1.3.1")
 }
 
 tasks.test {
@@ -28,12 +30,13 @@ application {
 	mainClass = "bread_experts_group.MainKt"
 }
 
-java {
-	withJavadocJar()
-	withSourcesJar()
-}
 kotlin {
 	jvmToolchain(21)
+}
+tasks.register<Jar>("dokkaJavadocJar") {
+	dependsOn(tasks.dokkaGeneratePublicationJavadoc)
+	from(tasks.dokkaGeneratePublicationJavadoc.flatMap { it.outputDirectory })
+	archiveClassifier.set("javadoc")
 }
 val localProperties = Properties().apply {
 	rootProject.file("local.properties").reader().use(::load)
@@ -47,6 +50,8 @@ publishing {
 		create<MavenPublication>("mavenKotlin") {
 			artifactId = "$artifactId-code"
 			from(components["kotlin"])
+			artifact(tasks.kotlinSourcesJar)
+			artifact(tasks["dokkaJavadocJar"])
 			pom {
 				name = "Maven file server"
 				description = "Distribution of software for Bread Experts Group Maven file servers."
