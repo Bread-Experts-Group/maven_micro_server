@@ -13,6 +13,10 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.min
 
+val unauthorizedHeaders = mapOf(
+	"WWW-Authenticate" to "Basic realm=\"Access to file operations\", charset=\"UTF-8\"",
+)
+
 @OptIn(ExperimentalEncodingApi::class)
 fun main(args: Array<String>) {
 	Thread.currentThread().name = "Maven-Main"
@@ -85,7 +89,7 @@ fun main(args: Array<String>) {
 								val authorization = request.headers["Authorization"]
 								if (authorization == null) {
 									error("No user provided, unauthorized for PUT")
-									HTTPResponse(401, request.version, emptyMap(), "")
+									HTTPResponse(401, request.version, unauthorizedHeaders, "")
 										.write(sock.outputStream)
 									return@start
 								}
@@ -95,7 +99,7 @@ fun main(args: Array<String>) {
 								val password = credentialTable[pair[0]]
 								if (password == null || password != pair[1]) {
 									error("${pair[0]} unauthorized for PUT, not a user or wrong password")
-									HTTPResponse(403, request.version, emptyMap(), "")
+									HTTPResponse(403, request.version, unauthorizedHeaders, "")
 										.write(sock.outputStream)
 									return@start
 								}
