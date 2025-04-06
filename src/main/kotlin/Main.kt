@@ -3,13 +3,11 @@ package bread_experts_group
 import bread_experts_group.http.HTTPMethod
 import bread_experts_group.http.HTTPRequest
 import bread_experts_group.http.HTTPResponse
+import bread_experts_group.http.getHTML
 import java.io.File
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import javax.net.ssl.SSLException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -43,7 +41,6 @@ fun main(args: Array<String>) {
 		credential[0] to credential[1]
 	}
 	val mavenStores = multipleArgs.getValue("store").map { File(it as String).absoluteFile.normalize() }
-	val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd [EEE] HH:mm:ss.SSS xxxx")
 	while (true) {
 		val sock = serverSocket.accept()
 		Thread.ofVirtual().name("Maven-${sock.localPort}<${sock.inetAddress}").start {
@@ -66,41 +63,7 @@ fun main(args: Array<String>) {
 									true
 								} else if (requestedPath.isDirectory) {
 									debug("Directory listing for \"${requestedPath.invariantSeparatorsPath}\"")
-									val data = buildString {
-										append("<!doctype html><html><head><style>")
-										append("*{font-family:\"Lucida Console\",monospace;color:white;background-color:darkblue")
-										append(";text-align:left}</style></head><body>")
-										append("<table style=\"width:100%\">")
-										append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
-										val files = requestedPath.listFiles()
-										if (files != null) {
-											files.sortByDescending { it.lastModified() }
-											files.sortByDescending { it.isDirectory }
-											files.forEach {
-												append("<tr><td><a href=\"${it.name}/\">${it.name}</td>")
-												append("<td>${if (it.isDirectory) "Directory" else it.length()}</td>")
-												val mod = Instant.ofEpochMilli(it.lastModified())
-													.atZone(ZoneId.systemDefault())
-												append("<td>${dateTimeFormatter.format(mod)}</td></tr>")
-											}
-										} else {
-											append("<tr><td>Folder not accessible</td><td>-1</td><td>-1</td></tr>")
-										}
-										append("<caption>")
-										val itParent = it.parentFile
-										append(itParent.invariantSeparatorsPath + '/')
-										var accessible = requestedPath.invariantSeparatorsPath
-											.substring(itParent.invariantSeparatorsPath.length + 1)
-										var completeCaption = ""
-										var backReferences = ""
-										accessible.split('/').reversed().forEachIndexed { index, it ->
-											completeCaption =
-												if (index == 0) it
-												else "<a href=\"$backReferences\">$it</a>/$completeCaption"
-											backReferences += "../"
-										}
-										append("$completeCaption</caption></tbody></table></body></html>")
-									}
+									val data = getHTML(it, requestedPath, "color:white;background-color:darkblue")
 									HTTPResponse(
 										200, request.version,
 										mapOf(
