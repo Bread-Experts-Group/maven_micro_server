@@ -56,7 +56,7 @@ fun main(args: Array<String>) {
 									debug("Found file for \"$storePath\" at \"${requestedPath.canonicalPath}\"")
 									HTTPResponse(
 										200, request.version,
-										mapOf("Content-Length" to requestedPath.length().toString())
+										emptyMap(), requestedPath.length()
 									).write(sock.outputStream)
 									if (request.method == HTTPMethod.GET)
 										requestedPath.inputStream().transferTo(sock.outputStream)
@@ -66,10 +66,8 @@ fun main(args: Array<String>) {
 									val data = getHTML(it, requestedPath, "color:white;background-color:darkblue")
 									HTTPResponse(
 										200, request.version,
-										mapOf(
-											"Content-Type" to "text/html",
-											"Content-Length" to data.length.toString()
-										)
+										mapOf("Content-Type" to "text/html"),
+										data.length
 									).write(sock.outputStream)
 									if (request.method == HTTPMethod.GET)
 										sock.outputStream.writeString(data)
@@ -78,7 +76,7 @@ fun main(args: Array<String>) {
 							} else false
 						} ?: run {
 							warn("No found file for \"$storePath\"")
-							HTTPResponse(404, request.version)
+							HTTPResponse(404, request.version, emptyMap(), "")
 								.write(sock.outputStream)
 						}
 
@@ -87,7 +85,7 @@ fun main(args: Array<String>) {
 								val authorization = request.headers["Authorization"]
 								if (authorization == null) {
 									error("No user provided, unauthorized for PUT")
-									HTTPResponse(401, request.version)
+									HTTPResponse(401, request.version, emptyMap(), "")
 										.write(sock.outputStream)
 									return@start
 								}
@@ -97,7 +95,7 @@ fun main(args: Array<String>) {
 								val password = credentialTable[pair[0]]
 								if (password == null || password != pair[1]) {
 									error("${pair[0]} unauthorized for PUT, not a user or wrong password")
-									HTTPResponse(403, request.version)
+									HTTPResponse(403, request.version, emptyMap(), "")
 										.write(sock.outputStream)
 									return@start
 								}
@@ -107,7 +105,7 @@ fun main(args: Array<String>) {
 							val size = request.headers["Content-Length"]?.toLongOrNull()
 							if (size == null || size < 1) {
 								warn("No size specified for PUT.")
-								HTTPResponse(400, request.version)
+								HTTPResponse(400, request.version, emptyMap(), "")
 									.write(sock.outputStream)
 							} else {
 								var writtenFile: File? = null
@@ -132,7 +130,7 @@ fun main(args: Array<String>) {
 										writtenFile.copyTo(requestedPath)
 									}
 								}
-								HTTPResponse(204, request.version)
+								HTTPResponse(204, request.version, emptyMap(), "")
 									.write(sock.outputStream)
 							}
 						}
