@@ -20,7 +20,7 @@ repositories {
 dependencies {
 	testImplementation(kotlin("test"))
 	implementation(kotlin("reflect"))
-	implementation("bread_experts_group:bread_server_lib-code:1.5.2")
+	implementation("bread_experts_group:bread_server_lib-code:1.5.3")
 }
 
 tasks.test {
