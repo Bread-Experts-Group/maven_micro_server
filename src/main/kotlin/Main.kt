@@ -21,7 +21,7 @@ fun main(args: Array<String>) {
 	debug("- Argument read")
 	val (singleArgs, multipleArgs) = readArgs(
 		args,
-		Flag<String>("ip"),
+		Flag<String>("ip", default = "0.0.0.0"),
 		Flag<Int>("port", default = 443, conv = ::stringToInt),
 		Flag<Int>("verbosity", default = 1, conv = ::stringToInt),
 		Flag<String>("store", repeatable = true),
@@ -33,7 +33,7 @@ fun main(args: Array<String>) {
 	debug("- Socket bind")
 	serverSocket.bind(
 		InetSocketAddress(
-			(singleArgs["ip"] as? String) ?: "0.0.0.0",
+			singleArgs["ip"] as String,
 			singleArgs["port"] as Int
 		)
 	)
