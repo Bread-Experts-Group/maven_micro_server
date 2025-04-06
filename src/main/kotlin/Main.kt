@@ -98,12 +98,12 @@ fun main(args: Array<String>) {
 									.split(':')
 								val password = credentialTable[pair[0]]
 								if (password == null || password != pair[1]) {
-									error("${pair[0]} unauthorized for PUT, not a user or wrong password")
+									error("\"${pair[0]}\" unauthorized for PUT, not a user or wrong password")
 									HTTPResponse(403, request.version, unauthorizedHeaders, "")
 										.write(sock.outputStream)
 									return@start
 								}
-								info("${pair[0]} authorized. Hello")
+								info("\"${pair[0]}\" authorized. Hello")
 							}
 
 							val size = request.headers["Content-Length"]?.toLongOrNull()
