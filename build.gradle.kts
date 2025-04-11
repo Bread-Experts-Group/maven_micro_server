@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "bread_experts_group"
-version = "1.4.1"
+version = "2.2"
 
 repositories {
 	mavenCentral()
@@ -20,7 +20,8 @@ repositories {
 dependencies {
 	testImplementation(kotlin("test"))
 	implementation(kotlin("reflect"))
-	implementation("bread_experts_group:bread_server_lib-code:1.6.4")
+	implementation("bread_experts_group:bread_server_lib-code:1.11")
+	implementation("bread_experts_group:static_server-code:1.2.1")
 }
 
 tasks.test {
