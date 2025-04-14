@@ -1,25 +1,28 @@
 package bread_experts_group
 
 import bread_experts_group.http.HTTPMethod
+import bread_experts_group.http.html.DirectoryListing
+
 
 fun main(args: Array<String>) {
 	val (singleArgs, multipleArgs, serverSocket) = getSocket(
 		args,
-		standardFlags + listOf(
-			Flag<String>("get_credential", repeatable = true),
-			Flag<String>("put_credential", repeatable = true),
-			Flag<String>("directory_listing_color", default = "off"),
-		)
+		Flag<String>("get_credential", repeatable = true),
+		Flag<String>("put_credential", repeatable = true),
+		Flag<String>("directory_listing_color", default = "off"),
+		Flag<String>("store", repeatable = true)
 	)
 	val getCredentialTable = multipleArgs["get_credential"]?.associate {
 		val credential = (it as String).split(',')
 		credential[0] to (credential[1] to credential[2].toBoolean())
 	}
+	val color = (singleArgs["directory_listing_color"] as String).let { if (it == "off") null else it }
+	DirectoryListing.css = "color:white;background-color:$color"
 	val getHead: ServerHandle = { stores, storePath, request, sock ->
 		httpServerGetHead(
 			stores, storePath, request, sock,
-			(singleArgs["directory_listing_color"] as String).let { if (it == "off") null else it },
-			getCredentialTable
+			getCredentialTable,
+			color != null
 		)
 	}
 	val putCredentialTable = multipleArgs["put_credential"]?.associate {
