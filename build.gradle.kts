@@ -21,7 +21,7 @@ dependencies {
 	testImplementation(kotlin("test"))
 	implementation(kotlin("reflect"))
 	implementation("bread_experts_group:bread_server_lib-code:1.15.1")
-	implementation("bread_experts_group:static_server-code:1.6")
+	implementation("bread_experts_group:static_server-code:1.6.1")
 }
 
 tasks.test {
