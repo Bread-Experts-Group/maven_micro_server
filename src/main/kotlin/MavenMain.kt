@@ -1,7 +1,8 @@
-package bread_experts_group
+package org.bread_experts_group
 
-import bread_experts_group.http.HTTPMethod
-import bread_experts_group.http.html.DirectoryListing
+import org.bread_experts_group.http.HTTPMethod
+import org.bread_experts_group.http.html.DirectoryListing
+import org.bread_experts_group.socket.failquick.FailQuickOutputStream
 
 
 fun main(args: Array<String>) {
@@ -20,7 +21,7 @@ fun main(args: Array<String>) {
 	DirectoryListing.css = "color:white;background-color:$color"
 	val getHead: ServerHandle = { stores, storePath, request, sock ->
 		httpServerGetHead(
-			stores, storePath, request, sock,
+			stores, storePath, request, FailQuickOutputStream(sock.outputStream),
 			getCredentialTable,
 			color != null
 		)

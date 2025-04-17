@@ -1,7 +1,7 @@
-package bread_experts_group
+package org.bread_experts_group
 
-import bread_experts_group.http.HTTPRequest
-import bread_experts_group.http.HTTPResponse
+import org.bread_experts_group.http.HTTPRequest
+import org.bread_experts_group.http.HTTPResponse
 import java.io.File
 import java.net.Socket
 import java.util.logging.Logger
