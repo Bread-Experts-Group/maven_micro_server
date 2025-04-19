@@ -2,6 +2,7 @@ package org.bread_experts_group
 
 import org.bread_experts_group.http.HTTPMethod
 import org.bread_experts_group.http.html.DirectoryListing
+import org.bread_experts_group.socket.failquick.FailQuickInputStream
 import org.bread_experts_group.socket.failquick.FailQuickOutputStream
 
 
@@ -32,7 +33,9 @@ fun main(args: Array<String>) {
 	}
 	val put: ServerHandle = { stores, storePath, request, sock ->
 		httpServerPut(
-			stores, storePath, request, sock,
+			stores, storePath, request,
+			FailQuickInputStream(sock.inputStream),
+			FailQuickOutputStream(sock.outputStream),
 			putCredentialTable
 		)
 	}

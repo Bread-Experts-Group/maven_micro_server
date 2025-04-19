@@ -2,8 +2,9 @@ package org.bread_experts_group
 
 import org.bread_experts_group.http.HTTPRequest
 import org.bread_experts_group.http.HTTPResponse
+import org.bread_experts_group.socket.failquick.FailQuickInputStream
+import org.bread_experts_group.socket.failquick.FailQuickOutputStream
 import java.io.File
-import java.net.Socket
 import java.util.logging.Logger
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -20,7 +21,8 @@ fun httpServerPut(
 	stores: List<File>,
 	storePath: String,
 	request: HTTPRequest,
-	sock: Socket,
+	nIn: FailQuickInputStream,
+	nOut: FailQuickOutputStream,
 	putCredentials: Map<String, String>? = null
 ) {
 	if (!putCredentials.isNullOrEmpty()) {
@@ -28,7 +30,7 @@ fun httpServerPut(
 		if (authorization == null) {
 			putLogger.warning("No user provided, unauthorized for GET")
 			HTTPResponse(401, request.version, unauthorizedHeadersPut, "")
-				.write(sock.outputStream)
+				.write(nOut)
 			return
 		}
 		val pair = Base64.decode(authorization.substringAfter("Basic "))
@@ -38,7 +40,7 @@ fun httpServerPut(
 		if (password == null || password != pair[1]) {
 			putLogger.warning { "\"${pair[0]}\" unauthorized for GET, not a user or wrong password" }
 			HTTPResponse(403, request.version, unauthorizedHeadersPut, "")
-				.write(sock.outputStream)
+				.write(nOut)
 			return
 		}
 		putLogger.info { "\"${pair[0]}\" authorized." }
@@ -48,9 +50,11 @@ fun httpServerPut(
 	if (size == null || size < 1) {
 		putLogger.warning("No size specified for PUT.")
 		HTTPResponse(400, request.version, emptyMap(), "")
-			.write(sock.outputStream)
+			.write(nOut)
 	} else {
 		var writtenFile: File? = null
+		HTTPResponse(100, request.version, emptyMap(), "")
+			.write(nOut)
 		stores.forEach {
 			val requestedPath = it.resolve(storePath).absoluteFile.normalize()
 			requestedPath.deleteRecursively()
@@ -60,7 +64,7 @@ fun httpServerPut(
 				var remainder = size
 				while (remainder > 0) {
 					val block = min(remainder, 1048576)
-					requestedPath.appendBytes(sock.inputStream.readNBytes(block.toInt()))
+					requestedPath.appendBytes(nIn.readNBytes(block.toInt()))
 					remainder -= block
 				}
 				writtenFile = requestedPath
@@ -73,6 +77,6 @@ fun httpServerPut(
 			}
 		}
 		HTTPResponse(204, request.version, emptyMap(), "")
-			.write(sock.outputStream)
+			.write(nOut)
 	}
 }
