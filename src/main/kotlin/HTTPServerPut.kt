@@ -5,6 +5,7 @@ import org.bread_experts_group.http.HTTPResponse
 import org.bread_experts_group.socket.failquick.FailQuickInputStream
 import org.bread_experts_group.socket.failquick.FailQuickOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.util.logging.Logger
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -61,12 +62,14 @@ fun httpServerPut(
 			requestedPath.parentFile.mkdirs()
 			if (writtenFile == null) {
 				putLogger.info { "New file [$size] written for \"$storePath\" at \"${requestedPath.canonicalPath}\"" }
+				val append = FileOutputStream(requestedPath, true)
 				var remainder = size
 				while (remainder > 0) {
 					val block = min(remainder, 1048576)
-					requestedPath.appendBytes(nIn.readNBytes(block.toInt()))
+					append.write(nIn.readNBytes(block.toInt()))
 					remainder -= block
 				}
+				append.close()
 				writtenFile = requestedPath
 			} else {
 				putLogger.fine {
