@@ -59,8 +59,8 @@ fun httpServerPut(
 				putLogger.info { "New file [$size] written for \"$storePath\" at \"${requestedPath.canonicalPath}\"" }
 				var remainder = size
 				while (remainder > 0) {
-					val block = min(remainder.toInt(), 65536)
-					requestedPath.appendBytes(sock.inputStream.readNBytes(block))
+					val block = min(remainder, 1048576)
+					requestedPath.appendBytes(sock.inputStream.readNBytes(block.toInt()))
 					remainder -= block
 				}
 				writtenFile = requestedPath
