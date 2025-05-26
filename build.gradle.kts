@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.0.1"
+version = "2.0.2"
 
 repositories {
 	mavenCentral()
@@ -26,8 +26,12 @@ tasks.test {
 	useJUnitPlatform()
 }
 application {
-	mainClass = "org.bread_experts_group.maven.MavenMainKt"
-	applicationDefaultJvmArgs = listOf("-XX:+UseZGC", "-XX:+ZGenerational", "-Xmx256m", "-XX:SoftMaxHeapSize=128m")
+	mainClass = "org.bread_experts_group.maven_microserver.MavenMainKt"
+	applicationDefaultJvmArgs = listOf(
+		"-XX:+UseZGC", "-Xms256m", "-Xmx256m", "-XX:SoftMaxHeapSize=128m", "-server",
+		"-XX:MaxDirectMemorySize=128m", "-XX:+AlwaysPreTouch", "-XX:+UseLargePages",
+		"-XX:+DisableExplicitGC", "-XX:MaxTenuringThreshold=1", "-XX:MaxGCPauseMillis=20"
+	)
 }
 
 kotlin {

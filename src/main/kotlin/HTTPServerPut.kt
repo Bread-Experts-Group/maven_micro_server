@@ -1,4 +1,4 @@
-package org.bread_experts_group.maven
+package org.bread_experts_group.maven_microserver
 
 import org.bread_experts_group.http.HTTPRequest
 import org.bread_experts_group.http.HTTPResponse
