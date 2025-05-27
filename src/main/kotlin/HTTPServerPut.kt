@@ -3,7 +3,7 @@ package org.bread_experts_group.maven_microserver
 import org.bread_experts_group.http.HTTPRequest
 import org.bread_experts_group.http.HTTPResponse
 import org.bread_experts_group.logging.ColoredLogger
-import org.bread_experts_group.static.checkAuthorization
+import org.bread_experts_group.static_microserver.checkAuthorization
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream

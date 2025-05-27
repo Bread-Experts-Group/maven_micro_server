@@ -3,10 +3,10 @@ package org.bread_experts_group.maven_microserver
 import org.bread_experts_group.Flag
 import org.bread_experts_group.http.HTTPMethod
 import org.bread_experts_group.http.html.DirectoryListing
-import org.bread_experts_group.static.ServerHandle
-import org.bread_experts_group.static.getSocket
-import org.bread_experts_group.static.httpServerGetHead
-import org.bread_experts_group.static.staticMain
+import org.bread_experts_group.static_microserver.ServerHandle
+import org.bread_experts_group.static_microserver.getSocket
+import org.bread_experts_group.static_microserver.httpServerGetHead
+import org.bread_experts_group.static_microserver.staticMain
 
 fun main(args: Array<String>) {
 	val (singleArgs, multipleArgs, serverSocket) = getSocket(
