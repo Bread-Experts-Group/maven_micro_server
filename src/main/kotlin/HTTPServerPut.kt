@@ -31,19 +31,24 @@ fun httpServerPut(
 
 	val size = request.headers["Content-Length"]?.toLongOrNull()
 	if (size == null || size < 1) {
-		putLogger.warning("No size specified for PUT.")
 		HTTPResponse(400, request.version)
 			.write(sOut)
 		return
 	}
 
 	var writtenFile: File? = null
-	HTTPResponse(100, request.version)
-		.write(sOut)
 	val storePath = '.' + request.path.path
 	stores.forEach {
-		val requestedPath = it.resolve(storePath).absoluteFile.normalize()
+		val requestedPath = it.resolve(storePath).canonicalFile
+		if (!(((!requestedPath.exists()) || requestedPath.canWrite()) && requestedPath.startsWith(storePath))) {
+			HTTPResponse(400, request.version)
+				.write(sOut)
+			return
+		}
+
 		requestedPath.parentFile.mkdirs()
+		HTTPResponse(100, request.version)
+			.write(sOut)
 		if (writtenFile == null) {
 			val fileStream = FileOutputStream(requestedPath)
 			var remainder = size
