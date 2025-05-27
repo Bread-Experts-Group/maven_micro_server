@@ -40,7 +40,7 @@ fun httpServerPut(
 	val storePath = '.' + request.path.path
 	stores.forEach {
 		val requestedPath = it.resolve(storePath).canonicalFile
-		if (!(((!requestedPath.exists()) || requestedPath.canWrite()) && requestedPath.startsWith(storePath))) {
+		if (!(((!requestedPath.exists()) || requestedPath.canWrite()) && requestedPath.startsWith(it))) {
 			HTTPResponse(400, request.version)
 				.write(sOut)
 			return
