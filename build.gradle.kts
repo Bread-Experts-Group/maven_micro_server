@@ -10,16 +10,17 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.5.0"
+version = "2.6.0"
 
 repositories {
 	mavenCentral()
-	maven { url = uri("https://maven.javart.zip/") }
+	mavenLocal()
+//	maven { url = uri("https://maven.javart.zip/") }
 }
 
 dependencies {
-	implementation("org.bread_experts_group:bread_server_lib-code:2.20.3")
-	implementation("org.bread_experts_group:static_microserver-code:2.4.0")
+	implementation("org.bread_experts_group:bread_server_lib-code:2.22.0")
+	implementation("org.bread_experts_group:static_microserver-code:2.6.0")
 }
 
 tasks.test {
@@ -88,7 +89,7 @@ publishing {
 	}
 	repositories {
 		maven {
-			url = uri("https://maven.javart.zip/")
+			url = uri("https://107-132-83-172.lightspeed.snantx.sbcglobal.net/")
 			credentials {
 				username = localProperties["mavenUser"] as String
 				password = localProperties["mavenPassword"] as String
