@@ -52,7 +52,7 @@ fun httpServerPut(
 			while (true) {
 				val read = request.data.read(buffer)
 				if (read == -1) break
-				fileStream.write(buffer)
+				fileStream.write(buffer, 0, read)
 			}
 			fileStream.flush()
 			fileStream.close()
