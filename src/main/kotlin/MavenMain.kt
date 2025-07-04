@@ -1,68 +1,48 @@
 package org.bread_experts_group.maven_microserver
 
-import org.bread_experts_group.Flag
+import org.bread_experts_group.command_line.Flag
 import org.bread_experts_group.http.HTTPMethod
 import org.bread_experts_group.http.html.DirectoryListing
 import org.bread_experts_group.static_microserver.ServerHandle
 import org.bread_experts_group.static_microserver.getSocket
 import org.bread_experts_group.static_microserver.httpServerGetHead
+import org.bread_experts_group.static_microserver.staticFlags
 import org.bread_experts_group.static_microserver.staticMain
 
 fun main(args: Array<String>) {
-	val (singleArgs, multipleArgs, serverSocket) = getSocket(
+	val (arguments, serverSocket) = getSocket(
 		args,
 		"maven_microserver",
 		"Distribution of software for Bread Experts Group Maven file servers.",
-		Flag<String>(
-			"put_credential",
-			"A credential required to write files or directories in a store.",
-			repeatable = true
-		),
-		Flag(
-			"directory_listing_color",
-			"The CSS background color the directory listing view will show. \"off\" disables the view.",
-			default = "off"
-		),
-		Flag<String>(
-			"get_credential",
-			"A credential required to access files or directory listings in a store.",
-			repeatable = true
-		),
-		Flag<String>(
-			"store",
-			"A folder which the server uses to search/write files. The first stores are of higher precedence." +
-					" Writes will propagate to all stores.",
-			repeatable = true,
-			required = 1
+		staticFlags + listOf(
+			Flag(
+				"put_credential",
+				"A credential required to write files or directories in a store.",
+				repeatable = true,
+				conv = {
+					val (user, passphrase) = it.split(',', limit = 2)
+					user to passphrase
+				}
+			)
 		)
 	)
-	val getCredentialTable = multipleArgs["get_credential"]?.associate {
-		val credential = (it as String).split(',')
-		credential[0] to credential[1]
-	}
-	val color = (singleArgs["directory_listing_color"] as String).let { if (it == "off") null else it }
+	val color = arguments.getRequired<String>("directory_listing_color").let { if (it == "off") null else it }
 	DirectoryListing.css = "color:white;background-color:$color"
-	val getHead: ServerHandle = { stores, request, sock ->
+	val getHead: ServerHandle = { selector, stores, request, sock ->
 		httpServerGetHead(
-			stores, request, sock.outputStream,
-			getCredentialTable,
+			selector, stores, request,
+			arguments.gets<Pair<String, String>>("get_credential")?.toMap(),
 			color != null
 		)
 	}
-	val putCredentialTable = multipleArgs["put_credential"]?.associate {
-		val credential = (it as String).split(',')
-		credential[0] to credential[1]
-	}
-	val put: ServerHandle = { stores, request, sock ->
+	val put: ServerHandle = { selector, stores, request, sock ->
 		httpServerPut(
-			stores, request,
-			sock.inputStream,
-			sock.outputStream,
-			putCredentialTable
+			selector, stores, request,
+			arguments.gets<Pair<String, String>>("put_credential")?.toMap()
 		)
 	}
 	staticMain(
-		multipleArgs, serverSocket,
+		arguments, serverSocket,
 		mapOf(
 			HTTPMethod.GET to getHead,
 			HTTPMethod.HEAD to getHead,

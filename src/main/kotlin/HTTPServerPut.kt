@@ -1,74 +1,67 @@
 package org.bread_experts_group.maven_microserver
 
+import org.bread_experts_group.http.HTTPProtocolSelector
 import org.bread_experts_group.http.HTTPRequest
 import org.bread_experts_group.http.HTTPResponse
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.static_microserver.checkAuthorization
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
+import org.bread_experts_group.stream.LongStream
+import java.nio.file.Path
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlin.math.min
+import kotlin.io.path.copyTo
+import kotlin.io.path.createParentDirectories
+import kotlin.io.path.outputStream
 
-private val putLogger = ColoredLogger.newLogger("Maven Server PUT")
+private val putLogger = ColoredHandler.newLogger("Maven Server PUT")
 
 @OptIn(ExperimentalEncodingApi::class)
 fun httpServerPut(
-	stores: List<File>,
+	selector: HTTPProtocolSelector,
+	stores: List<Path>,
 	request: HTTPRequest,
-	sIn: InputStream,
-	sOut: OutputStream,
 	putCredentials: Map<String, String>? = null
 ) {
 	if (!putCredentials.isNullOrEmpty()) {
 		val failResponse = checkAuthorization(request, putCredentials)
 		if (failResponse != null) {
-			failResponse.write(sOut)
+			selector.sendResponse(failResponse)
 			return
 		}
 	}
 
-	val size = request.headers["Content-Length"]?.toLongOrNull()
-	if (size == null || size < 1) {
-		HTTPResponse(400, request.version)
-			.write(sOut)
-		return
-	}
+	if (request.headers["expect"]?.contains("100-continue") == true)
+		selector.sendResponse(HTTPResponse(request, 100))
 
-	var writtenFile: File? = null
+	var writtenFile: Path? = null
 	val storePath = '.' + request.path.path
 	stores.forEach {
-		val requestedPath = it.resolve(storePath).canonicalFile
-		if (!(((!requestedPath.exists()) || requestedPath.canWrite()) && requestedPath.startsWith(it))) {
-			HTTPResponse(400, request.version)
-				.write(sOut)
+		val requestedPath = it.resolve(storePath).normalize()
+		if (!requestedPath.startsWith(it)) {
+			selector.sendResponse(HTTPResponse(request, 404))
 			return
 		}
 
-		requestedPath.parentFile.mkdirs()
-		HTTPResponse(100, request.version)
-			.write(sOut)
+		requestedPath.createParentDirectories()
+		val size = when (val data = request.data) {
+			is LongStream -> data.longAvailable()
+			else -> data.available().toLong()
+		}
 		if (writtenFile == null) {
-			val fileStream = FileOutputStream(requestedPath)
-			var remainder = size
-			while (remainder > 0) {
-				val block = min(remainder, 2048)
-				fileStream.write(sIn.readNBytes(block.toInt()))
-				fileStream.flush()
-				remainder -= block
+			val fileStream = requestedPath.outputStream()
+			val buffer = ByteArray(4096)
+			while (true) {
+				val read = request.data.read(buffer)
+				if (read == -1) break
+				fileStream.write(buffer)
 			}
+			fileStream.flush()
 			fileStream.close()
 			writtenFile = requestedPath
-			putLogger.info { "New file [$size] written for \"$storePath\" at \"${requestedPath.canonicalPath}\"" }
+			putLogger.info { "New file [$size] written for \"$storePath\" at \"$requestedPath\"" }
 		} else {
-			putLogger.fine {
-				"File [$size] for \"$storePath\" copied to " +
-						"\"${requestedPath.canonicalPath}\" from \"${writtenFile.canonicalPath}\""
-			}
+			putLogger.fine { "File [$size] for \"$storePath\" copied to \"$requestedPath\" from \"$writtenFile\"" }
 			writtenFile.copyTo(requestedPath, true)
 		}
 	}
-	HTTPResponse(204, request.version)
-		.write(sOut)
+	selector.sendResponse(HTTPResponse(request, 204))
 }

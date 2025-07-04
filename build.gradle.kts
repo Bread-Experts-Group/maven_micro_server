@@ -1,7 +1,7 @@
 import java.util.Properties
 
 plugins {
-	kotlin("jvm") version "2.1.10"
+	kotlin("jvm") version "2.2.0"
 	id("org.jetbrains.dokka-javadoc") version "2.0.0"
 	`maven-publish`
 	`java-library`
@@ -10,17 +10,16 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.6.0"
+version = "3.0.0"
 
 repositories {
 	mavenCentral()
-	mavenLocal()
-//	maven { url = uri("https://maven.javart.zip/") }
+	maven { url = uri("https://maven.breadexperts.group/") }
 }
 
 dependencies {
-	implementation("org.bread_experts_group:bread_server_lib-code:2.22.0")
-	implementation("org.bread_experts_group:static_microserver-code:2.6.0")
+	implementation("org.bread_experts_group:bread_server_lib-code:2.51.6")
+	implementation("org.bread_experts_group:static_microserver-code:3.1.1")
 }
 
 tasks.test {
@@ -61,7 +60,7 @@ publishing {
 			pom {
 				name = "Maven file server"
 				description = "Distribution of software for Bread Experts Group Maven file servers."
-				url = "https://javart.zip"
+				url = "https://breadexperts.group"
 				signing {
 					sign(publishing.publications["mavenKotlin"])
 					sign(configurations.archives.get())
@@ -76,20 +75,20 @@ publishing {
 					developer {
 						id = "mikoe"
 						name = "Miko Elbrecht"
-						email = "miko@javart.zip"
+						email = "miko@breadexperts.group"
 					}
 				}
 				scm {
 					connection = "scm:git:git://github.com/Bread-Experts-Group/bread_server_lib.git"
 					developerConnection = "scm:git:ssh://git@github.com:Bread-Experts-Group/maven_micro_server.git"
-					url = "https://javart.zip"
+					url = "https://breadexperts.group"
 				}
 			}
 		}
 	}
 	repositories {
 		maven {
-			url = uri("https://107-132-83-172.lightspeed.snantx.sbcglobal.net/")
+			url = uri("https://maven.breadexperts.group/")
 			credentials {
 				username = localProperties["mavenUser"] as String
 				password = localProperties["mavenPassword"] as String
