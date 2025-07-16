@@ -1,11 +1,13 @@
 package org.bread_experts_group.maven_microserver
 
 import org.bread_experts_group.command_line.Flag
-import org.bread_experts_group.http.HTTPMethod
-import org.bread_experts_group.http.html.DirectoryListing
+import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.protocol.http.HTTPMethod
+import org.bread_experts_group.protocol.http.header.HTTPForwardedHeader
 import org.bread_experts_group.static_microserver.ServerHandle
+import org.bread_experts_group.static_microserver.getHead
 import org.bread_experts_group.static_microserver.getSocket
-import org.bread_experts_group.static_microserver.httpServerGetHead
+import org.bread_experts_group.static_microserver.initGET
 import org.bread_experts_group.static_microserver.staticFlags
 import org.bread_experts_group.static_microserver.staticMain
 
@@ -26,21 +28,18 @@ fun main(args: Array<String>) {
 			)
 		)
 	)
-	val color = arguments.getRequired<String>("directory_listing_color").let { if (it == "off") null else it }
-	DirectoryListing.css = "color:white;background-color:$color"
-	val getHead: ServerHandle = { selector, stores, request, sock ->
-		httpServerGetHead(
-			selector, stores, request,
-			arguments.gets<Pair<String, String>>("get_credential")?.toMap(),
-			color != null
-		)
+	val putCredentials = arguments.gets<Pair<String, String>>("put_credential")?.toMap()
+	val put: ServerHandle = { selector, stores, request, sock, arguments ->
+		val loggerName = StringBuilder("Maven PUT : ")
+		loggerName.append(sock.remoteAddress)
+		val logger = ColoredHandler.newLogger(loggerName.toString())
+		request.headers["forwarded"]?.let {
+			val forwardees = HTTPForwardedHeader.parse(it).forwardees
+			logger.info("Request forwarded: $forwardees")
+		}
+		httpServerPut(logger, selector, stores, request, putCredentials)
 	}
-	val put: ServerHandle = { selector, stores, request, sock ->
-		httpServerPut(
-			selector, stores, request,
-			arguments.gets<Pair<String, String>>("put_credential")?.toMap()
-		)
-	}
+	initGET(arguments)
 	staticMain(
 		arguments, serverSocket,
 		mapOf(

@@ -1,28 +1,27 @@
 package org.bread_experts_group.maven_microserver
 
-import org.bread_experts_group.http.HTTPProtocolSelector
-import org.bread_experts_group.http.HTTPRequest
-import org.bread_experts_group.http.HTTPResponse
-import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.protocol.http.HTTPProtocolSelector
+import org.bread_experts_group.protocol.http.HTTPRequest
+import org.bread_experts_group.protocol.http.HTTPResponse
 import org.bread_experts_group.static_microserver.checkAuthorization
-import org.bread_experts_group.stream.LongStream
+import java.nio.channels.FileChannel
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
+import java.util.logging.Logger
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.io.path.copyTo
 import kotlin.io.path.createParentDirectories
-import kotlin.io.path.outputStream
-
-private val putLogger = ColoredHandler.newLogger("Maven Server PUT")
 
 @OptIn(ExperimentalEncodingApi::class)
 fun httpServerPut(
+	logger: Logger,
 	selector: HTTPProtocolSelector,
 	stores: List<Path>,
 	request: HTTPRequest,
 	putCredentials: Map<String, String>? = null
 ) {
 	if (!putCredentials.isNullOrEmpty()) {
-		val failResponse = checkAuthorization(request, putCredentials)
+		val failResponse = checkAuthorization(logger, request, putCredentials)
 		if (failResponse != null) {
 			selector.sendResponse(failResponse)
 			return
@@ -42,24 +41,17 @@ fun httpServerPut(
 		}
 
 		requestedPath.createParentDirectories()
-		val size = when (val data = request.data) {
-			is LongStream -> data.longAvailable()
-			else -> data.available().toLong()
-		}
 		if (writtenFile == null) {
-			val fileStream = requestedPath.outputStream()
-			val buffer = ByteArray(4096)
-			while (true) {
-				val read = request.data.read(buffer)
-				if (read == -1) break
-				fileStream.write(buffer, 0, read)
-			}
-			fileStream.flush()
-			fileStream.close()
+			val file = FileChannel.open(
+				requestedPath,
+				StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, StandardOpenOption.CREATE
+			)
+			file.transferFrom(request.data, 0, Long.MAX_VALUE)
 			writtenFile = requestedPath
-			putLogger.info { "New file [$size] written for \"$storePath\" at \"$requestedPath\"" }
+			logger.info { "New file [${file.size()}] written for \"$storePath\" at \"$requestedPath\"" }
+			file.close()
 		} else {
-			putLogger.fine { "File [$size] for \"$storePath\" copied to \"$requestedPath\" from \"$writtenFile\"" }
+			logger.fine { "\"$storePath\" copied to \"$requestedPath\" from \"$writtenFile\"" }
 			writtenFile.copyTo(requestedPath, true)
 		}
 	}
